@@ -1,7 +1,20 @@
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import {supabase} from '../utils/appUtil'
 
 function AdminLayout() {
-
+    const navigate = useNavigate();
+    useEffect(() => {
+        
+        (async () => {
+            const res = await supabase.auth.getSession()
+            if (res.data.session) {
+                
+            } else {
+                navigate('/dang-nhap')
+            }
+        })()
+    }, [])
     return (
         <>
         <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -16,7 +29,11 @@ function AdminLayout() {
                             <a className="nav-link active" aria-current="page" href="#">Home</a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="#">Features</a>
+                            <a className="nav-link" href="/dang-nhap">Đăng nhập</a>
+                        </li>
+                        
+                        <li className="nav-item">
+                            <a className="nav-link" href="/admin/room">Phòng</a>
                         </li>
                     </ul>
                 </div>
