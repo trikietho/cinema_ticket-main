@@ -36,18 +36,41 @@ function Room() {
     }, []);
 
     const [roomName, setRoomName] = useState('')
-    async function upsertRoom(id: number) {
-        let res;
-        if(roomId === 0 ) {
-            res = await supabase
-            .from('rooms')
-            .insert({ 
-                id: roomId, room_name: roomName})
-        } else {
-            res = await supabase
+    // Không cần truyền tham số id vào đây, dùng luôn state roomId
+    async function upsertRoom() {
+        // Kiểm tra validation đơn giản
+        if (!roomName.trim()) {
+            alert("Vui lòng nhập tên phòng");
+            return;
+        }
+
+        let result;
+        
+        // Trường hợp THÊM MỚI (roomId = 0 hoặc null)
+        if (!roomId || roomId === 0) {
+            // LƯU Ý: Không truyền 'id' khi insert để DB tự sinh ID tự động
+            result = await supabase
                 .from('rooms')
-                .update({ id: roomId, room_name: roomName })
-                .eq('id', id)
+                .insert({ room_name: roomName });
+        } 
+        // Trường hợp SỬA (roomId có giá trị)
+        else {
+            result = await supabase
+                .from('rooms')
+                .update({ room_name: roomName }) // Chỉ update tên, không update ID
+                .eq('id', roomId);
+        }
+
+        const { error } = result;
+
+        if (error) {
+            alert("Lỗi lưu dữ liệu: " + error.message);
+        } else {
+            // Thành công thì load lại trang và đóng modal
+            await loadRooms();
+            setShow(false);
+            setRoomName('');
+            setRoomId(0);
         }
     }
 
@@ -120,7 +143,7 @@ function Room() {
                 
                 <button  className="btn btn-outline-danger" onClick={() => multipleDelte()}>Xóa hàng loạt</button>
             </div>
-            <table className="table table-bordered">
+            <table className="striped bordered hover">
                 <tbody>
                     <tr>
                         <th><input className="form-check-input" type="checkbox" value="" id="defaultCheck1"/></th>
@@ -163,7 +186,7 @@ function Room() {
                                 onChange={(ev) => setRoomName(ev.target.value)} />
                         </div>
                         <div className="mt-3">
-                            <button type="button" onClick={() => upsertRoom} className="btn btn-success">
+                            <button type="button" onClick={upsertRoom} className="btn btn-success">
                                 Lưu dữ liệu
                             </button>
                         </div>

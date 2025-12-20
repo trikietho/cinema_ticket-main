@@ -5,6 +5,7 @@ import Room from './pages/admin/Room';
 import ClientLayout from './layouts/ClientLayout';
 import Register from './pages/client/Register';
 import Login from './pages/client/Login';
+import FilmUpsert from './pages/admin/FilmUpsert';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         <Route path='admin' element={<AdminLayout />}>
           <Route path='room' element={<Room />} />
+          <Route path='upsert' element={<FilmUpsert/>}/>
         </Route>
 
         <Route element={<ClientLayout />}>
