@@ -1,7 +1,7 @@
 export type FilmType = {
     name: string;
     director?: string;
-    thumbnail_url?: string;
+    poster_url?: string;
     trailer_url?: string ;
     description?: string;
     release_date?: string;

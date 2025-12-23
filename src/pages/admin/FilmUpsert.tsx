@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { FilmType } from "../../types/Film";
 import { supabase } from "../../utils/appUtil";
+import SelectGenre from "../../components/SelectGenere";
 
 function FilmUpsert() {
 
     const [filmName, setFilmName] = useState('');
     const [director, setDirector] = useState('');
-    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [posterUrl, setPosterUrl] = useState('');
     const [trailerUrl, setTrailerUrl] = useState('');
     const [description, setDescription] = useState('');
     const [genreId, setGenreId] = useState<number>();
@@ -20,7 +21,7 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
     const data:FilmType =  {
         name  : filmName,
         director : director,
-        thumbnail_url  : thumbnailUrl,
+        poster_url  : posterUrl,
         trailer_url : trailerUrl,
         description :  description,
         genre_id  : genreId,
@@ -74,7 +75,7 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
                                 <div className="input-group">
                                     <span className="input-group-text"><i className="bi bi-image"></i></span>
                                     <input 
-                                        onChange={(ev) => setThumbnailUrl(ev.target.value)} 
+                                        onChange={(ev) => setPosterUrl(ev.target.value)} 
                                         type="text" 
                                         className="form-control" 
                                         placeholder="https://..." 
@@ -120,28 +121,18 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
                             {/* Chuyển sang Select box thay vì nhập số */}
                             <div className="col-md-4">
                                 <label className="form-label fw-bold">Thể loại</label>
-                                <select 
-                                    onChange={(ev) => setGenreId(Number(ev.target.value))} 
-                                    className="form-select"
+                                <SelectGenre
+                                onChange={setGenreId}
                                 >
-                                    <option value="">-- Chọn thể loại --</option>
-                                    <option value="1">Hành động</option>
-                                    <option value="2">Tình cảm</option>
-                                    {/* Map danh sách thể loại của bạn vào đây */}
-                                </select>
+                                </SelectGenre>
                             </div>
 
                             <div className="col-md-4">
                                 <label className="form-label fw-bold">Độ tuổi</label>
-                                <select 
-                                    onChange={(ev) => setRatingId(Number(ev.target.value))} 
-                                    className="form-select"
+                                <SelectGenre
+                                onChange={setRatingId}
                                 >
-                                    <option value="">-- Chọn độ tuổi --</option>
-                                    <option value="1">P - Phổ biến</option>
-                                    <option value="2">C18 - Trên 18 tuổi</option>
-                                    {/* Map danh sách rating của bạn vào đây */}
-                                </select>
+                                </SelectGenre>
                             </div>
                         </div>
 
