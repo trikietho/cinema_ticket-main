@@ -1,23 +1,61 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FilmType } from "../../types/Film";
 import { supabase } from "../../utils/appUtil";
 import SelectGenre from "../../components/SelectGenere";
+import SelectRating from "../../components/SelectRating";
+import { useNavigate } from "react-router-dom";
 
 function FilmUpsert() {
 
     const [filmName, setFilmName] = useState('');
     const [director, setDirector] = useState('');
-    const [posterUrl, setPosterUrl] = useState('');
-    const [trailerUrl, setTrailerUrl] = useState('');
+    
     const [description, setDescription] = useState('');
     const [genreId, setGenreId] = useState<number>();
     const [ratingId, setRatingId] = useState<number>();
     const [releaseDate, setReleaseDate] = useState('');
     const [isShowing, setIsShowing] = useState(false);
 
+    const posterRef = useRef<HTMLInputElement>(null);
+    const trailerRef = useRef<HTMLInputElement>(null);
+
+    const navigate = useNavigate();//gửi dữ  liệu lên supabase
+    
+    
+
 async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
+    let posterUrl = '';
+    let trailerUrl = '';
+
     ev.preventDefault();
-    //gửi dữ  liệu lên supabase
+//upload hình poster
+    const posters = posterRef.current?.files;
+    if(posters && posters.length > 0) {
+        const file = posters[0];
+        const res = await supabase.storage
+        .from('cinema_ticket')
+        .upload(`thumbnails/${Date.now()}-${file.name}`, file);
+        if(res.data){
+            const url = supabase.storage.from('cinema_ticket').getPublicUrl(res.data.path)
+
+            posterUrl=url.data.publicUrl
+        }
+    }
+
+//upload trailer
+    const trailers = trailerRef.current?.files;
+    if(trailers && trailers.length > 0) {
+        const file = trailers[0];
+        const res = await supabase.storage
+        .from('cinema_ticket')
+        .upload(`trailers/${Date.now()}-${file.name}`, file);
+        if(res.data){
+            const url = supabase.storage.from('cinema_ticket').getPublicUrl(res.data.path)
+            trailerUrl =url.data.publicUrl
+        }
+    }
+
+    
     const data:FilmType =  {
         name  : filmName,
         director : director,
@@ -29,7 +67,18 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
         release_date : releaseDate,
         is_showing : isShowing,
     }
-    const res = await supabase.from("films").insert(data);
+    //gửi dữ liệu lên supabase
+    // Sửa lại đoạn cuối hàm handleSubmit
+        const res = await supabase.from("films").insert(data);
+
+        if (!res.error) {
+            // Không có lỗi -> Thành công
+            navigate("/admin/film");
+        } else {
+            // Có lỗi -> In ra để debug
+            console.error("Lỗi thêm phim:", res.error);
+            alert("Có lỗi xảy ra: " + res.error.message);
+        }
 }
 
     return (
@@ -75,10 +124,9 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
                                 <div className="input-group">
                                     <span className="input-group-text"><i className="bi bi-image"></i></span>
                                     <input 
-                                        onChange={(ev) => setPosterUrl(ev.target.value)} 
-                                        type="text" 
+                                        type="file" 
+                                        ref={posterRef}
                                         className="form-control" 
-                                        placeholder="https://..." 
                                     />
                                 </div>
                             </div>
@@ -87,10 +135,9 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
                                 <div className="input-group">
                                     <span className="input-group-text"><i className="bi bi-youtube"></i></span>
                                     <input 
-                                        onChange={(ev) => setTrailerUrl(ev.target.value)} 
-                                        type="text" 
+                                        type="file"
+                                        ref={trailerRef}
                                         className="form-control" 
-                                        placeholder="https://..." 
                                     />
                                 </div>
                             </div>
@@ -129,10 +176,7 @@ async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
 
                             <div className="col-md-4">
                                 <label className="form-label fw-bold">Độ tuổi</label>
-                                <SelectGenre
-                                onChange={setRatingId}
-                                >
-                                </SelectGenre>
+                                <SelectRating onChange={setRatingId} />
                             </div>
                         </div>
 

@@ -26,10 +26,10 @@ function SelectGenres({ selectedId, onChange }: SelectGenreProps)   {
     <select onChange={ (ev) => onChange && onChange(Number(ev.target.value))} className="form-select">
     <option value="">--Chọn 1 giá trị--</option>
     {
-        genres.map ( (genre) =>
+        genres.map ( genre =>
             <option key={genre.id}
-            value={genre.id}> 
-            
+            value={genre.id} 
+            selected={ selectedId === genre.id}>
                 {genre.name}
             </option>
         )

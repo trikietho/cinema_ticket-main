@@ -9,3 +9,16 @@ export type FilmType = {
     genre_id?: number;
     rating_id?: number;
 }
+
+export type FilmsListItem = FilmType & {
+    id: number;
+    name: string;
+    poster_url: string;
+    mst_film_genres: {
+        name?: string;
+    },
+    mst_film_ratings: {
+        name?: string;
+    },
+    release_date: string;
+}
