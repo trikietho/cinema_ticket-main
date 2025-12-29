@@ -64,6 +64,7 @@ function Film() {
                 ))}
                 </tbody>
             </table>
+            
         </>
     
     );

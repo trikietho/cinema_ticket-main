@@ -2,11 +2,22 @@ import { supabase } from "../../utils/appUtil";
 import { useEffect, useState } from "react";
 import type { RoomListItem } from "../../types/room";
 import AppModal from "../../components/AppModal";
+import { useForm } from "react-hook-form";
 
+type RoomForm  = {
+    room_name : string;
+}
 
 function Room() {
     const [rooms, setRooms] = useState<RoomListItem[]>([]);
     const [show, setShow] = useState(false)
+
+    const {
+        formState : {errors},
+        register, 
+        handleSubmit, 
+        setValue
+    } = useForm<RoomForm>();
 
 
     async function loadRooms() {
@@ -35,63 +46,53 @@ function Room() {
         loadRooms();
     }, []);
 
-    const [roomName, setRoomName] = useState('')
-    // Không cần truyền tham số id vào đây, dùng luôn state roomId
-    async function upsertRoom() {
-        // Kiểm tra validation đơn giản
-        if (!roomName.trim()) {
-            alert("Vui lòng nhập tên phòng");
-            return;
-        }
-
-        let result;
-        
-        // Trường hợp THÊM MỚI (roomId = 0 hoặc null)
-        if (!roomId || roomId === 0) {
-            // LƯU Ý: Không truyền 'id' khi insert để DB tự sinh ID tự động
-            result = await supabase
-                .from('rooms')
-                .insert({ room_name: roomName });
-        } 
-        // Trường hợp SỬA (roomId có giá trị)
-        else {
-            result = await supabase
-                .from('rooms')
-                .update({ room_name: roomName }) // Chỉ update tên, không update ID
-                .eq('id', roomId);
-        }
-
-        const { error } = result;
-
-        if (error) {
-            alert("Lỗi lưu dữ liệu: " + error.message);
-        } else {
-            // Thành công thì load lại trang và đóng modal
-            await loadRooms();
-            setShow(false);
-            setRoomName('');
-            setRoomId(0);
-        }
+   // const [roomName, setRoomName] = useState('')
+    async function upsertRoom(formData: RoomForm) {
+    let result;
+    
+    // Trường hợp THÊM MỚI (roomId = 0)
+    if (roomId === 0) {
+        result = await supabase
+            .from('rooms')
+            .insert(formData); // <--- SỬA TẠI ĐÂY: Bỏ dấu { }
+    } 
+    else {
+        result = await supabase
+            .from('rooms')
+            .update(formData) // <--- SỬA TẠI ĐÂY: Bỏ dấu { }
+            .eq('id', roomId);
     }
+
+    // --- BỔ SUNG QUAN TRỌNG ---
+    // Bạn cần kiểm tra kết quả để tải lại trang và đóng modal
+    if (result.error) {
+        alert("Có lỗi xảy ra: " + result.error.message);
+    } else {
+        // Thành công: tải lại danh sách và đóng modal
+        await loadRooms();
+        setShow(false);
+        alert("Lưu dữ liệu thành công!");
+    }
+}
 
     //sửa
     const [roomId, setRoomId] = useState<number | null>()
     const [mHeader, setmHeader] = useState('')
     function showModal(headerText:string) {
         setmHeader(headerText);
-        setRoomName('')
+        setValue("room_name", "")
         setShow(true);
         setRoomId(0);
     }
     async function editRoom (id: number) {
         showModal('Sửa thông tin phòng');
-        setRoomName('')
+        setValue("room_name", "")
         setRoomId(null)
         const {data, status} = await supabase.from('rooms').select().eq('id', id);
         if(status == 200 && data) {
             const room = (data as RoomListItem[])[0];
             if(room ) {
-                setRoomName(room.room_name ?? '')
+                setValue("room_name", "")
                 setRoomId(room.id)
             }
         }
@@ -178,15 +179,15 @@ function Room() {
             {/* Form thêm/sửa phòng */}
             
             <AppModal showAdd={show} onHide={() => setShow(false)} headerText={mHeader}>
-                    <form>
+                    <form onSubmit={handleSubmit(upsertRoom)}>
                         <div className="mt-3">
                             <label className="form-label">Tên phòng</label>
-                            <input type="text" className="form-control" 
-                                value={roomName}
-                                onChange={(ev) => setRoomName(ev.target.value)} />
+                            <input {...register("room_name", {required: true})} className="form-control"/>
+                            {errors.room_name?.type=="required" && 
+                            <span className="text-danger d-inline-block mt-1">Tên phòng là bắt buộc</span>}
                         </div>
                         <div className="mt-3">
-                            <button type="button" onClick={upsertRoom} className="btn btn-success">
+                            <button type="submit"  className="btn btn-success">
                                 Lưu dữ liệu
                             </button>
                         </div>
