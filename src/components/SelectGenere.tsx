@@ -1,40 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import { supabase } from "../utils/appUtil";
 
-type SelectGenreProps = {
-    selectedId?: number,
-    onChange?: (genreId: number) => void;
-};
-
-function SelectGenres({ selectedId, onChange }: SelectGenreProps)   {
-    const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
-    useEffect( () => 
-    {
-        supabase.from('mst_film_genres').select().then(res => 
-        {
-            if (!res.data) return ;
-            setGenres(res.data?.map ( i =>
-            {
-                return { id : i.id ,
-                    name : i.name}
-            }
-            ))
-        }
-        )
-    },[]);
-    return (
-    <select onChange={ (ev) => onChange && onChange(Number(ev.target.value))} className="form-select">
-    <option value="">--Chọn 1 giá trị--</option>
-    {
-        genres.map ( genre =>
-            <option key={genre.id}
-            value={genre.id} 
-            selected={ selectedId === genre.id}>
-                {genre.name}
-            </option>
-        )
-    }
-    </select>
-    );   
+type GenreType = {
+    id: number;
+    name: string;
 }
-export default SelectGenres;
+
+function SelectGenre({onChange, selectedId}: {onChange?: (genreId: number) => void, selectedId?: number}) {
+    const [genres, setGenres] = useState<GenreType[]>([])
+    async function loadRooms() {
+        const { data, error } = await supabase.from('mst_film_genres').select().order('id', { ascending: true });
+        if (error) {
+            alert('Xảy ra lỗi khi lấy dữ liệu');
+        }
+        setGenres(data as GenreType[]);
+        
+    }
+    useEffect(() => {
+        loadRooms()
+    }, [])
+    return (
+        <>
+            <select value={selectedId} className="form-select" onChange={(ev) => onChange && onChange(Number(ev.target.value))}>
+                <option value={0}>-- chọn --</option>
+                {genres.map(genre => (
+                <option key={genre.id}  
+                value={genre.id}>{genre.name}
+                </option>
+                ))}
+            </select>
+        </>
+    )
+}
+export default SelectGenre
